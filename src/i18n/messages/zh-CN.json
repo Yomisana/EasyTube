@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "EasyTube",
+    "description": "简单好用的视频下载工具"
+  },
+  "hero": {
+    "placeholder": "粘贴视频网址",
+    "download": "下载",
+    "quality": "品质",
+    "best": "最佳品质",
+    "probe_hint": "正在分析视频..."
+  },
+  "clipboard": {
+    "toggle": "自动侦测剪贴板链接",
+    "detected": "侦测到视频链接！要下载吗？",
+    "yes": "下载",
+    "no": "不要"
+  },
+  "progress": {
+    "preparing": "准备中",
+    "downloading": "下载中",
+    "verifying": "检查文件中",
+    "done": "下载完成",
+    "failed": "下载失败",
+    "open_folder": "打开文件夹",
+    "retry": "重试"
+  },
+  "history": {
+    "title": "下载历史",
+    "empty": "还没有下载记录",
+    "redownload": "重新下载",
+    "clear": "清除记录"
+  },
+  "settings": {
+    "title": "设置",
+    "download_dir": "下载目录",
+    "language": "语言",
+    "theme": "主题",
+    "theme_system": "跟随系统",
+    "theme_light": "浅色",
+    "theme_dark": "深色",
+    "concurrent": "同步下载数",
+    "filter": "剪贴板过滤",
+    "ytdlp_update": "更新 yt-dlp",
+    "update_available": "有新版本可用",
+    "up_to_date": "已是最新版本"
+  },
+  "error": {
+    "invalid_url": "无法辨识的网址，请确认后再试一次",
+    "no_connection": "请检查网络连接",
+    "download_failed": "下载时发生错误，请稍后再试",
+    "unknown": "发生未知错误"
+  }
+}

@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev]
+
+env:
+  PNPM_VERSION: "9"
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm biome check .
+      - run: pnpm check
+      - run: pnpm test -- --coverage
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace
+
+  locale-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm i18n:generate
+      - run: git diff --exit-code src/i18n/messages/zh-CN.json

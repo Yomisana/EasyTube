@@ -1,0 +1,33 @@
+[package]
+name = "easytube"
+version.workspace = true
+edition = "2021"
+description = "A simple video downloader powered by yt-dlp"
+authors = ["EasyTube Contributors"]
+license.workspace = true
+
+[lib]
+name = "easytube_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+tauri-plugin-store = "2"
+tauri-plugin-clipboard-manager = "2"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+easytube-core = { path = "../crates/core" }
+easytube-mcp = { path = "../crates/mcp" }
+easytube-cli = { path = "../crates/cli" }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

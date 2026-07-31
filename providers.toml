@@ -1,0 +1,32 @@
+# yt-dlp / ffmpeg binary download sources
+# Single source of truth — no hardcoded detection in code.
+
+[ytdlp]
+pinned_version = "2025.07.21"
+
+[ytdlp.assets.windows_x86_64]
+url = "https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp.exe"
+
+[ytdlp.assets.macos_x86_64]
+url = "https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_macos"
+
+[ytdlp.assets.macos_aarch64]
+url = "https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_macos"
+
+[ytdlp.assets.linux_x86_64]
+url = "https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_linux"
+
+[ffmpeg]
+pinned_version = "7.1"
+
+[ffmpeg.assets.windows_x86_64]
+url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+
+[ffmpeg.assets.macos_x86_64]
+url = "https://evermeet.cx/ffmpeg/ffmpeg-{version}.7z"
+
+[ffmpeg.assets.macos_aarch64]
+url = "https://www.osxexperts.net/ffmpeg{version}arm.7z"
+
+[ffmpeg.assets.linux_x86_64]
+url = "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
