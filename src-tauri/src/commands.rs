@@ -11,6 +11,7 @@ use tracing::{debug, error, info, warn};
 use easytube_core::provider::{BinaryProvider, ProviderType};
 use easytube_core::types::*;
 
+use crate::clipboard::ClipboardMonitor;
 use crate::AppState;
 
 pub struct RunningJob {
@@ -289,4 +290,44 @@ fn ytdlp_download_url() -> String {
     { format!("https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_linux", version = version) }
     #[cfg(target_os = "windows")]
     { format!("https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp.exe", version = version) }
+}
+
+// --- clipboard commands ---
+
+#[tauri::command]
+pub async fn check_clipboard(
+    state: State<'_, AppState>,
+    text: String,
+) -> Result<Option<String>, String> {
+    Ok(state.clipboard.check_clipboard_text(&text).await)
+}
+
+#[tauri::command]
+pub async fn set_clipboard_enabled(
+    state: State<'_, AppState>,
+    enabled: bool,
+) -> Result<(), String> {
+    state.clipboard.set_enabled(enabled).await;
+    Ok(())
+}
+
+#[derive(serde::Serialize)]
+pub struct ClipboardSettings {
+    pub enabled: bool,
+    pub allowlist: Vec<String>,
+    pub blocklist: Vec<String>,
+    pub tracking_blacklist: Vec<String>,
+}
+
+#[tauri::command]
+pub async fn get_clipboard_settings(
+    state: State<'_, AppState>,
+) -> Result<ClipboardSettings, String> {
+    let monitor = &state.clipboard;
+    Ok(ClipboardSettings {
+        enabled: monitor.is_enabled().await,
+        allowlist: vec![],
+        blocklist: vec![],
+        tracking_blacklist: vec![],
+    })
 }
