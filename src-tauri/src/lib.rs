@@ -1,82 +1,55 @@
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
+use tokio::process::Child;
+use tokio::sync::RwLock;
+use tracing::{debug, error, info, warn};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct VideoInfo {
-    pub title: String,
-    pub url: String,
-    pub thumbnail: Option<String>,
-    pub formats: Vec<FormatInfo>,
-    pub duration: Option<String>,
+use easytube_core::provider::{BinaryProvider, ProviderType};
+use easytube_core::state::{DownloadManager, DownloadSettings};
+use easytube_core::types::*;
+
+mod commands;
+
+use commands::RunningJob;
+
+pub struct AppState {
+    pub manager: Arc<DownloadManager>,
+    running: Arc<RwLock<HashMap<String, RunningJob>>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct FormatInfo {
-    pub id: String,
-    pub ext: String,
-    pub resolution: Option<String>,
-    pub filesize: Option<i64>,
-    pub note: Option<String>,
-}
+impl AppState {
+    pub fn new() -> Self {
+        let ytdlp = BinaryProvider::find_ytdlp(&ProviderType::System)
+            .or_else(|| BinaryProvider::find_ytdlp(&ProviderType::Downloaded))
+            .unwrap_or_else(|| PathBuf::from("yt-dlp"));
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DownloadProgress {
-    pub job_id: String,
-    pub stage: String,
-    pub percent: f64,
-    pub speed: Option<String>,
-    pub eta: Option<String>,
-}
+        let ffmpeg = BinaryProvider::find_ffmpeg(&ProviderType::System)
+            .or_else(|| BinaryProvider::find_ffmpeg(&ProviderType::Downloaded));
 
-#[tauri::command]
-fn probe_url(url: String) -> Result<VideoInfo, String> {
-    Ok(VideoInfo {
-        title: "placeholder".into(),
-        url,
-        thumbnail: None,
-        formats: vec![],
-        duration: None,
-    })
-}
+        let settings = DownloadSettings::default();
+        let manager = Arc::new(DownloadManager::new(settings, ytdlp, ffmpeg));
 
-#[tauri::command]
-fn start_download(url: String, format_id: Option<String>) -> Result<String, String> {
-    let _ = (url, format_id);
-    Ok("job-001".into())
-}
-
-#[tauri::command]
-fn cancel_download(job_id: String) -> Result<(), String> {
-    let _ = job_id;
-    Ok(())
-}
-
-#[tauri::command]
-fn get_history() -> Result<Vec<String>, String> {
-    Ok(vec![])
-}
-
-#[tauri::command]
-fn get_settings() -> Result<serde_json::Value, String> {
-    Ok(serde_json::json!({
-        "clipboard_monitor": false,
-        "download_dir": "",
-        "language": "zh-TW",
-        "theme": "system"
-    }))
-}
-
-#[tauri::command]
-fn save_settings(settings: serde_json::Value) -> Result<(), String> {
-    let _ = settings;
-    Ok(())
+        Self {
+            manager,
+            running: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
         .with_writer(std::io::stderr)
         .init();
+
+    let state = AppState::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -91,13 +64,15 @@ pub fn run() {
             }
             Ok(())
         })
+        .manage(state)
         .invoke_handler(tauri::generate_handler![
-            probe_url,
-            start_download,
-            cancel_download,
-            get_history,
-            get_settings,
-            save_settings,
+            commands::probe_url,
+            commands::start_download,
+            commands::cancel_download,
+            commands::get_history,
+            commands::get_settings,
+            commands::save_settings,
+            commands::download_ytdlp,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

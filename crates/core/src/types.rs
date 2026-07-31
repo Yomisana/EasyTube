@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,10 +25,12 @@ pub struct DownloadJob {
     pub id: String,
     pub url: String,
     pub title: Option<String>,
+    pub thumbnail: Option<String>,
     pub format_id: Option<String>,
-    pub output_dir: Option<String>,
+    pub output_dir: Option<PathBuf>,
     pub status: JobStatus,
     pub progress: Option<DownloadProgress>,
+    pub created_at: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -45,8 +49,36 @@ pub struct DownloadProgress {
     pub job_id: String,
     pub stage: String,
     pub percent: f64,
-    pub speed: Option<String>,
-    pub eta: Option<String>,
+    pub speed_bytes: Option<u64>,
+    pub eta_seconds: Option<u64>,
+    pub downloaded_bytes: Option<u64>,
+    pub total_bytes: Option<u64>,
+}
+
+impl DownloadProgress {
+    pub fn preparing(id: &str) -> Self {
+        Self {
+            job_id: id.to_string(),
+            stage: "preparing".into(),
+            percent: 0.0,
+            speed_bytes: None,
+            eta_seconds: None,
+            downloaded_bytes: None,
+            total_bytes: None,
+        }
+    }
+
+    pub fn done(id: &str) -> Self {
+        Self {
+            job_id: id.to_string(),
+            stage: "done".into(),
+            percent: 100.0,
+            speed_bytes: None,
+            eta_seconds: None,
+            downloaded_bytes: None,
+            total_bytes: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,6 +88,7 @@ pub struct AppSettings {
     pub language: String,
     pub theme: String,
     pub concurrent_downloads: u32,
+    pub max_concurrent: u32,
     pub filter_allowlist: Vec<String>,
     pub tracking_params_blacklist: Vec<String>,
 }
@@ -67,7 +100,8 @@ impl Default for AppSettings {
             download_dir: None,
             language: "zh-TW".into(),
             theme: "system".into(),
-            concurrent_downloads: 2,
+            concurrent_downloads: 5,
+            max_concurrent: 60,
             filter_allowlist: vec![
                 "youtube.com".into(),
                 "youtu.be".into(),
