@@ -17,22 +17,27 @@
     "no": "不要"
   },
   "progress": {
+    "title": "下载状态",
     "preparing": "准备中",
     "downloading": "下载中",
     "verifying": "检查文件中",
     "done": "下载完成",
     "failed": "下载失败",
     "open_folder": "打开文件夹",
-    "retry": "重试"
+    "retry": "重试",
+    "try_another": "换一个网址",
+    "download_another": "下载另一个视频"
   },
   "history": {
     "title": "下载历史",
     "empty": "还没有下载记录",
     "redownload": "重新下载",
-    "clear": "清除记录"
+    "clear": "清除记录",
+    "loading": "加载中..."
   },
   "settings": {
     "title": "设置",
+    "done": "完成",
     "download_dir": "下载目录",
     "language": "语言",
     "theme": "主题",
@@ -40,15 +45,31 @@
     "theme_light": "浅色",
     "theme_dark": "深色",
     "concurrent": "同步下载数",
+    "concurrent_desc": "同时下载 {n} 部视频",
     "filter": "剪贴板过滤",
     "ytdlp_update": "更新 yt-dlp",
     "update_available": "有新版本可用",
-    "up_to_date": "已是最新版本"
+    "up_to_date": "已是最新版本",
+    "browse": "浏览"
+  },
+  "nav": {
+    "home": "首页",
+    "history": "历史",
+    "settings": "设置"
+  },
+  "duplicate": {
+    "title": "已下载过",
+    "resolution": "分辨率",
+    "downloaded_at": "下载时间",
+    "message": "这个视频已用相同品质设置下载过了。确定要重新下载吗？",
+    "cancel": "取消",
+    "redownload": "重新下载"
   },
   "error": {
     "invalid_url": "无法辨识的网址，请确认后再试一次",
     "no_connection": "请检查网络连接",
     "download_failed": "下载时发生错误，请稍后再试",
-    "unknown": "发生未知错误"
+    "unknown": "发生未知错误",
+    "probe_failed": "无法取得视频信息"
   }
 }

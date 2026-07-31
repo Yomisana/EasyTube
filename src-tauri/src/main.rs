@@ -10,7 +10,9 @@ fn main() {
                 easytube_mcp::serve();
             }
             "download" | "probe" | "history" | "settings" => {
-                easytube_cli::run(&args[1..]);
+                let mut full = vec!["easytube".to_string()];
+                full.extend_from_slice(&args[1..]);
+                easytube_cli::run(&full);
             }
             _ => {
                 easytube_lib::run();

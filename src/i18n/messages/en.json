@@ -17,22 +17,27 @@
     "no": "No"
   },
   "progress": {
+    "title": "Download Status",
     "preparing": "Preparing",
     "downloading": "Downloading",
     "verifying": "Verifying",
     "done": "Download complete",
     "failed": "Download failed",
     "open_folder": "Open folder",
-    "retry": "Retry"
+    "retry": "Retry",
+    "try_another": "Try another URL",
+    "download_another": "Download another video"
   },
   "history": {
     "title": "Download History",
     "empty": "No downloads yet",
     "redownload": "Redownload",
-    "clear": "Clear history"
+    "clear": "Clear history",
+    "loading": "Loading..."
   },
   "settings": {
     "title": "Settings",
+    "done": "Done",
     "download_dir": "Download directory",
     "language": "Language",
     "theme": "Theme",
@@ -40,15 +45,31 @@
     "theme_light": "Light",
     "theme_dark": "Dark",
     "concurrent": "Concurrent downloads",
+    "concurrent_desc": "{n} downloads at once",
     "filter": "Clipboard filter",
     "ytdlp_update": "Update yt-dlp",
     "update_available": "New version available",
-    "up_to_date": "Up to date"
+    "up_to_date": "Up to date",
+    "browse": "Browse"
+  },
+  "nav": {
+    "home": "Home",
+    "history": "History",
+    "settings": "Settings"
+  },
+  "duplicate": {
+    "title": "Already downloaded",
+    "resolution": "Resolution",
+    "downloaded_at": "Downloaded at",
+    "message": "This video was already downloaded with the same quality settings. Are you sure you want to download it again?",
+    "cancel": "Cancel",
+    "redownload": "Download Again"
   },
   "error": {
     "invalid_url": "Cannot recognize this URL. Please check and try again.",
     "no_connection": "Please check your internet connection.",
     "download_failed": "Download failed. Please try again later.",
-    "unknown": "An unknown error occurred."
+    "unknown": "An unknown error occurred.",
+    "probe_failed": "Could not fetch video information"
   }
 }

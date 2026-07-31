@@ -17,22 +17,27 @@
     "no": "不要"
   },
   "progress": {
+    "title": "下載狀態",
     "preparing": "準備中",
     "downloading": "下載中",
     "verifying": "檢查檔案中",
     "done": "下載完成",
     "failed": "下載失敗",
     "open_folder": "開啟資料夾",
-    "retry": "重試"
+    "retry": "重試",
+    "try_another": "換一個網址",
+    "download_another": "下載另一個影片"
   },
   "history": {
     "title": "下載歷史",
     "empty": "還沒有下載記錄",
     "redownload": "重新下載",
-    "clear": "清除記錄"
+    "clear": "清除記錄",
+    "loading": "載入中..."
   },
   "settings": {
     "title": "設定",
+    "done": "完成",
     "download_dir": "下載目錄",
     "language": "語言",
     "theme": "主題",
@@ -40,15 +45,32 @@
     "theme_light": "淺色",
     "theme_dark": "深色",
     "concurrent": "同步下載數",
+    "concurrent_desc": "同時下載 {n} 部影片",
     "filter": "剪貼簿過濾",
     "ytdlp_update": "更新 yt-dlp",
     "update_available": "有新版本可用",
-    "up_to_date": "已是最新版本"
+    "up_to_date": "已是最新版本",
+    "browse": "瀏覽"
+  },
+  "nav": {
+    "home": "首頁",
+    "history": "歷史",
+    "settings": "設定"
+  },
+  "duplicate": {
+    "title": "已下載過",
+    "resolution": "解析度",
+    "downloaded_at": "下載時間",
+    "message": "這個影片已用相同品質設定下載過了。確定要重新下載嗎？",
+    "cancel": "取消",
+    "redownload": "重新下載"
   },
   "error": {
     "invalid_url": "無法辨識的網址，請確認後再試一次",
     "no_connection": "請檢查網路連線",
     "download_failed": "下載時發生錯誤，請稍後再試",
-    "unknown": "發生未知錯誤"
+    "unknown": "發生未知錯誤",
+    "probe_failed": "無法取得影片資訊"
   }
 }
+
