@@ -7,6 +7,8 @@ import {
   type HistoryEntry,
 } from "@/lib/history";
 
+export type { HistoryEntry };
+
 export function useHistory() {
   const queryClient = useQueryClient();
 
