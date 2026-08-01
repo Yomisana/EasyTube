@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 22
           cache: "pnpm"
-      - run: pnpm install
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm biome check .
       - run: pnpm check
       - run: pnpm test -- --coverage
@@ -45,6 +45,6 @@ jobs:
         with:
           node-version: 22
           cache: "pnpm"
-      - run: pnpm install
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm i18n:generate
       - run: git diff --exit-code src/i18n/messages/zh-CN.json

@@ -1,7 +1,10 @@
 use std::path::{Path, PathBuf};
+#[cfg(target_os = "macos")]
 use std::process::Command as SyncCommand;
 
-use tracing::{debug, info, warn};
+#[cfg(target_os = "macos")]
+use tracing::warn;
+use tracing::{debug, info};
 
 #[derive(Debug, Clone)]
 pub enum ProviderType {
