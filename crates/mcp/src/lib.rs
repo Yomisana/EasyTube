@@ -1,4 +1,4 @@
-use std::io::{self, BufRead, Write};
+use std::io::BufRead;
 
 use easytube_core::history::{add_history_entry, HistoryEntry};
 use easytube_core::provider::{BinaryProvider, ProviderType};
@@ -207,7 +207,7 @@ async fn handle_call_tool(id: Value, params: &Value, manager: Arc<DownloadManage
             let output_dir = arguments
                 .get("output_dir")
                 .and_then(|d| d.as_str())
-                .map(|s| std::path::PathBuf::from(s));
+                .map(std::path::PathBuf::from);
 
             match manager.create_download(url, format_id, output_dir).await {
                 Ok(job_id) => {

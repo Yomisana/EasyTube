@@ -4,7 +4,6 @@ use std::sync::Arc;
 use easytube_core::provider::{BinaryProvider, ProviderType};
 use easytube_core::state::{DownloadManager, DownloadSettings};
 use tokio::sync::RwLock;
-use tracing::info;
 
 mod clipboard;
 mod commands;
@@ -16,6 +15,12 @@ pub struct AppState {
     pub manager: Arc<DownloadManager>,
     pub running: Arc<RwLock<HashMap<String, RunningJob>>>,
     pub clipboard: Arc<ClipboardMonitor>,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AppState {
@@ -53,7 +58,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
-            use tauri::Manager;
+            
             let _tray = app.tray_by_id("easytube-tray");
             Ok(())
         })

@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use std::time::Duration;
 
 use easytube_core::filter::{run_filter_pipeline, FilterPipeline, FilterResult};
 use tokio::sync::RwLock;
@@ -51,6 +50,10 @@ impl ClipboardMonitor {
     pub async fn set_enabled(&self, enabled: bool) {
         *self.enabled.write().await = enabled;
         info!(enabled, "clipboard monitor");
+    }
+
+    pub async fn set_interval_ms(&self, ms: u64) {
+        *self.interval_ms.write().await = ms;
     }
 
     pub async fn set_allowlist(&self, list: Vec<String>) {

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use easytube_core::history::{clear_history, load_history};
+use easytube_core::history::load_history;
 use easytube_core::provider::{BinaryProvider, ProviderType};
 use easytube_core::settings::{get_setting, load_settings, set_setting};
 use easytube_core::state::{DownloadManager, DownloadSettings};

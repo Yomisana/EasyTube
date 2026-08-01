@@ -59,7 +59,7 @@ impl DownloadManager {
         ytdlp_path: PathBuf,
         ffmpeg_path: Option<PathBuf>,
     ) -> Self {
-        let max = settings.max_concurrent.min(MAX_CONCURRENT_LIMIT).max(1);
+        let max = settings.max_concurrent.clamp(1, MAX_CONCURRENT_LIMIT);
         let output_dir = settings.output_dir.clone();
         let (tx, _) = tokio::sync::broadcast::channel(256);
         Self {
@@ -78,7 +78,7 @@ impl DownloadManager {
     }
 
     pub async fn set_max_concurrent(&self, n: usize) {
-        let n = n.min(MAX_CONCURRENT_LIMIT).max(1);
+        let n = n.clamp(1, MAX_CONCURRENT_LIMIT);
         self.settings.write().await.max_concurrent = n;
         info!(n, "max concurrent updated");
     }

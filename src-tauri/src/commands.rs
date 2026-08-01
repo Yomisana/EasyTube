@@ -8,10 +8,9 @@ use tokio::process::Child;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 
-use easytube_core::provider::{BinaryProvider, ProviderType};
+use easytube_core::provider::BinaryProvider;
 use easytube_core::types::*;
 
-use crate::clipboard::ClipboardMonitor;
 use crate::AppState;
 
 pub struct RunningJob {
@@ -186,7 +185,7 @@ async fn run_download_job(
     }
 
     *child_lock.lock().await = Some(child);
-    let mut child = child_lock.lock().await.take().unwrap();
+    let child = child_lock.lock().await.take().unwrap();
 
     let output = match child.wait_with_output().await {
         Ok(o) => o,
@@ -282,7 +281,7 @@ pub async fn cancel_download(state: State<'_, AppState>, job_id: String) -> Resu
         .update_status(&job_id, JobStatus::Cancelled)
         .await;
 
-    if let Some(mut entry) = state.running.write().await.remove(&job_id) {
+    if let Some(entry) = state.running.write().await.remove(&job_id) {
         if let Some(mut child) = entry.child.lock().await.take() {
             if let Err(e) = child.kill().await {
                 warn!(job_id, error = %e, "kill failed");
