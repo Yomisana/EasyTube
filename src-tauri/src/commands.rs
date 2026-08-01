@@ -87,11 +87,16 @@ async fn run_download_job(
         }
         Err(e) => {
             error!(job_id, error = %e, "probe failed");
-            manager.update_status(job_id, JobStatus::Failed(e.clone())).await;
-            let _ = app.emit("download-failed", serde_json::json!({
-                "job_id": job_id,
-                "error": e,
-            }));
+            manager
+                .update_status(job_id, JobStatus::Failed(e.clone()))
+                .await;
+            let _ = app.emit(
+                "download-failed",
+                serde_json::json!({
+                    "job_id": job_id,
+                    "error": e,
+                }),
+            );
             return;
         }
     }
@@ -128,11 +133,16 @@ async fn run_download_job(
         Ok(c) => c,
         Err(e) => {
             error!(job_id, error = %e, "spawn failed");
-            manager.update_status(job_id, JobStatus::Failed(e.to_string())).await;
-            let _ = app.emit("download-failed", serde_json::json!({
-                "job_id": job_id,
-                "error": e.to_string(),
-            }));
+            manager
+                .update_status(job_id, JobStatus::Failed(e.to_string()))
+                .await;
+            let _ = app.emit(
+                "download-failed",
+                serde_json::json!({
+                    "job_id": job_id,
+                    "error": e.to_string(),
+                }),
+            );
             return;
         }
     };
@@ -158,15 +168,18 @@ async fn run_download_job(
             let mut lines = reader.lines();
             while let Ok(Some(line)) = lines.next_line().await {
                 if let Some(pct) = extract_percent(&line) {
-                    let _ = app.emit("download-progress", ProgressPayload {
-                        job_id: job_id.clone(),
-                        stage: "downloading".into(),
-                        percent: pct,
-                        speed_bytes: None,
-                        eta_seconds: None,
-                        downloaded_bytes: None,
-                        total_bytes: None,
-                    });
+                    let _ = app.emit(
+                        "download-progress",
+                        ProgressPayload {
+                            job_id: job_id.clone(),
+                            stage: "downloading".into(),
+                            percent: pct,
+                            speed_bytes: None,
+                            eta_seconds: None,
+                            downloaded_bytes: None,
+                            total_bytes: None,
+                        },
+                    );
                 }
             }
         });
@@ -179,11 +192,16 @@ async fn run_download_job(
         Ok(o) => o,
         Err(e) => {
             error!(job_id, error = %e, "process error");
-            manager.update_status(job_id, JobStatus::Failed(e.to_string())).await;
-            let _ = app.emit("download-failed", serde_json::json!({
-                "job_id": job_id,
-                "error": e.to_string(),
-            }));
+            manager
+                .update_status(job_id, JobStatus::Failed(e.to_string()))
+                .await;
+            let _ = app.emit(
+                "download-failed",
+                serde_json::json!({
+                    "job_id": job_id,
+                    "error": e.to_string(),
+                }),
+            );
             running.write().await.remove(job_id);
             return;
         }
@@ -196,48 +214,73 @@ async fn run_download_job(
         let output_file = stdout.lines().last().map(|s| s.to_string());
         manager.update_status(job_id, JobStatus::Done).await;
         emit_stage(app, job_id, "done", 100.0);
-        let _ = app.emit("download-complete", serde_json::json!({
-            "job_id": job_id,
-            "output_file": output_file,
-        }));
+        let _ = app.emit(
+            "download-complete",
+            serde_json::json!({
+                "job_id": job_id,
+                "output_file": output_file,
+            }),
+        );
         info!(job_id, "download done");
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         let err = stderr.lines().last().unwrap_or("unknown").to_string();
-        manager.update_status(job_id, JobStatus::Failed(err.clone())).await;
-        let _ = app.emit("download-failed", serde_json::json!({
-            "job_id": job_id,
-            "error": err,
-        }));
+        manager
+            .update_status(job_id, JobStatus::Failed(err.clone()))
+            .await;
+        let _ = app.emit(
+            "download-failed",
+            serde_json::json!({
+                "job_id": job_id,
+                "error": err,
+            }),
+        );
         error!(job_id, "download failed");
     }
 }
 
 fn emit_stage(app: &AppHandle, job_id: &str, stage: &str, percent: f64) {
-    let _ = app.emit("download-progress", ProgressPayload {
-        job_id: job_id.to_string(),
-        stage: stage.to_string(),
-        percent,
-        speed_bytes: None,
-        eta_seconds: None,
-        downloaded_bytes: None,
-        total_bytes: None,
-    });
+    let _ = app.emit(
+        "download-progress",
+        ProgressPayload {
+            job_id: job_id.to_string(),
+            stage: stage.to_string(),
+            percent,
+            speed_bytes: None,
+            eta_seconds: None,
+            downloaded_bytes: None,
+            total_bytes: None,
+        },
+    );
 }
 
 fn extract_percent(line: &str) -> Option<f64> {
-    if !line.contains('%') { return None; }
-    let pct = line.split('%').next()?.trim().rsplit(' ').next()?.trim().parse::<f64>().ok()?;
-    if (0.0..=100.0).contains(&pct) { Some(pct) } else { None }
+    if !line.contains('%') {
+        return None;
+    }
+    let pct = line
+        .split('%')
+        .next()?
+        .trim()
+        .rsplit(' ')
+        .next()?
+        .trim()
+        .parse::<f64>()
+        .ok()?;
+    if (0.0..=100.0).contains(&pct) {
+        Some(pct)
+    } else {
+        None
+    }
 }
 
 #[tauri::command]
-pub async fn cancel_download(
-    state: State<'_, AppState>,
-    job_id: String,
-) -> Result<(), String> {
+pub async fn cancel_download(state: State<'_, AppState>, job_id: String) -> Result<(), String> {
     info!(job_id, "cancelling");
-    state.manager.update_status(&job_id, JobStatus::Cancelled).await;
+    state
+        .manager
+        .update_status(&job_id, JobStatus::Cancelled)
+        .await;
 
     if let Some(mut entry) = state.running.write().await.remove(&job_id) {
         if let Some(mut child) = entry.child.lock().await.take() {
@@ -283,13 +326,33 @@ pub async fn download_ytdlp() -> Result<String, String> {
 fn ytdlp_download_url() -> String {
     let version = "2026.07.04";
     #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-    { format!("https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_macos", version = version) }
+    {
+        format!(
+            "https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_macos",
+            version = version
+        )
+    }
     #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
-    { format!("https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_macos", version = version) }
+    {
+        format!(
+            "https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_macos",
+            version = version
+        )
+    }
     #[cfg(target_os = "linux")]
-    { format!("https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_linux", version = version) }
+    {
+        format!(
+            "https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp_linux",
+            version = version
+        )
+    }
     #[cfg(target_os = "windows")]
-    { format!("https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp.exe", version = version) }
+    {
+        format!(
+            "https://github.com/yt-dlp/yt-dlp/releases/download/{version}/yt-dlp.exe",
+            version = version
+        )
+    }
 }
 
 // --- clipboard commands ---

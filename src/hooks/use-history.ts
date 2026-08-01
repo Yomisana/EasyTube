@@ -1,11 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getHistory,
-  addHistoryEntry,
-  removeHistoryEntry,
-  clearHistory,
   type HistoryEntry,
-} from "@/lib/history";
+  addHistoryEntry,
+  clearHistory,
+  getHistory,
+  removeHistoryEntry,
+} from '@/lib/history';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export type { HistoryEntry };
 
@@ -13,7 +13,7 @@ export function useHistory() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["history"],
+    queryKey: ['history'],
     queryFn: getHistory,
     staleTime: 0,
   });
@@ -21,21 +21,21 @@ export function useHistory() {
   const addEntry = useMutation({
     mutationFn: (entry: HistoryEntry) => addHistoryEntry(entry),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["history"] });
+      queryClient.invalidateQueries({ queryKey: ['history'] });
     },
   });
 
   const removeEntry = useMutation({
     mutationFn: (jobId: string) => removeHistoryEntry(jobId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["history"] });
+      queryClient.invalidateQueries({ queryKey: ['history'] });
     },
   });
 
   const clearAll = useMutation({
     mutationFn: () => clearHistory(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["history"] });
+      queryClient.invalidateQueries({ queryKey: ['history'] });
     },
   });
 

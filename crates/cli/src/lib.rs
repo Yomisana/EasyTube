@@ -1,7 +1,9 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use easytube_core::history::{clear_history, load_history};
 use easytube_core::provider::{BinaryProvider, ProviderType};
+use easytube_core::settings::{get_setting, load_settings, set_setting};
 use easytube_core::state::{DownloadManager, DownloadSettings};
 
 #[derive(Parser)]
@@ -72,16 +74,21 @@ pub fn run(args: &[String]) {
     };
 
     match cli.command {
-        Commands::Download { url, format, output } => {
+        Commands::Download {
+            url,
+            format,
+            output,
+        } => {
             rt.block_on(async {
-                match manager.create_download(url.clone(), format.clone(), output).await {
+                match manager
+                    .create_download(url.clone(), format.clone(), output)
+                    .await
+                {
                     Ok(job_id) => {
                         eprintln!("Download started. job_id: {}", job_id);
                         eprintln!("URL: {}", url);
 
-                        let out_dir = manager.output_dir().clone()
-                            .to_string_lossy()
-                            .to_string();
+                        let out_dir = manager.output_dir().clone().to_string_lossy().to_string();
                         let fmt = format.as_deref().unwrap_or("best");
 
                         let status = tokio::process::Command::new(manager.ytdlp_path())
@@ -146,26 +153,52 @@ pub fn run(args: &[String]) {
         }
 
         Commands::History { limit } => {
-            eprintln!("History is managed by the GUI (IndexedDB).");
-            eprintln!("Use the desktop app to view download history.");
-            let _ = limit;
-        }
-
-        Commands::Settings { key, value } => {
-            match (key, value) {
-                (Some(k), Some(v)) => {
-                    println!("Setting {} = {}", k, v);
-                    eprintln!("Settings persistence not yet implemented.");
-                }
-                (Some(k), None) => {
-                    println!("Reading setting: {}", k);
-                    eprintln!("Settings persistence not yet implemented.");
-                }
-                (None, _) => {
-                    println!("max_concurrent: 5");
-                    println!("language: zh-TW");
-                }
+            let entries = load_history();
+            let count = entries.len().min(limit);
+            println!(
+                "Download history ({} total, showing {}):",
+                entries.len(),
+                count
+            );
+            for (i, entry) in entries.iter().take(limit).enumerate() {
+                println!(
+                    "{:3}. [{}] {} ({}) @ {}",
+                    i + 1,
+                    entry.status,
+                    entry.title,
+                    entry.format_id.as_deref().unwrap_or("best"),
+                    &entry.downloaded_at[..10.min(entry.downloaded_at.len())],
+                );
+                println!("      {}", entry.url);
+            }
+            if entries.len() > limit {
+                println!("... and {} more entries", entries.len() - limit);
             }
         }
+
+        Commands::Settings { key, value } => match (key, value) {
+            (Some(k), Some(v)) => match set_setting(&k, &v) {
+                Ok(()) => println!("{} = {}", k, v),
+                Err(e) => eprintln!("Error: {}", e),
+            },
+            (Some(k), None) => {
+                println!("{} = {}", k, get_setting(&k));
+            }
+            (None, _) => {
+                let s = load_settings();
+                println!("language:           {}", s.language);
+                println!("theme:              {}", s.theme);
+                println!(
+                    "download_dir:       {}",
+                    if s.download_dir.is_empty() {
+                        "(default)"
+                    } else {
+                        &s.download_dir
+                    }
+                );
+                println!("max_concurrent:     {}", s.max_concurrent);
+                println!("clipboard_monitor:  {}", s.clipboard_monitor);
+            }
+        },
     }
 }

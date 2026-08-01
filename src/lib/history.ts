@@ -1,6 +1,6 @@
-import { get, set, del } from "idb-keyval";
+import { del, get, set } from 'idb-keyval';
 
-const HISTORY_KEY = "easytube-history";
+const HISTORY_KEY = 'easytube-history';
 
 export interface HistoryEntry {
   jobId: string;
@@ -9,7 +9,7 @@ export interface HistoryEntry {
   formatId?: string;
   resolution?: string;
   outputFile?: string;
-  status: "done" | "failed" | "cancelled";
+  status: 'done' | 'failed' | 'cancelled';
   downloadedAt: string;
 }
 
@@ -41,7 +41,7 @@ export async function clearHistory(): Promise<void> {
 
 export async function hasDownloaded(url: string): Promise<boolean> {
   const entries = await getHistory();
-  return entries.some((e) => e.url === url && e.status === "done");
+  return entries.some((e) => e.url === url && e.status === 'done');
 }
 
 export async function checkDuplicateDownload(
@@ -51,10 +51,7 @@ export async function checkDuplicateDownload(
   const entries = await getHistory();
   return (
     entries.find(
-      (e) =>
-        e.url === url &&
-        e.formatId === formatId &&
-        e.status === "done",
+      (e) => e.url === url && e.formatId === formatId && e.status === 'done',
     ) ?? null
   );
 }

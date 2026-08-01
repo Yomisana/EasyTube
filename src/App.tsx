@@ -1,22 +1,22 @@
-import { useState, useCallback, useEffect } from "react";
-import { useTranslations, useLocale } from "use-intl";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { openPath } from "@tauri-apps/plugin-opener";
-import { Download, History, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { ProbeResult } from "@/components/ProbeResult";
-import { DownloadStatus } from "@/components/DownloadStatus";
-import { DuplicateDialog } from "@/components/DuplicateDialog";
-import { DetectedDialog } from "@/components/DetectedDialog";
-import { ClipboardToggle } from "@/components/ClipboardToggle";
-import { SettingsPage } from "@/components/SettingsPage";
-import { HistoryList } from "@/components/HistoryList";
-import { checkDuplicateDownload, addHistoryEntry } from "@/lib/history";
+import { ClipboardToggle } from '@/components/ClipboardToggle';
+import { DetectedDialog } from '@/components/DetectedDialog';
+import { DownloadStatus } from '@/components/DownloadStatus';
+import { DuplicateDialog } from '@/components/DuplicateDialog';
+import { HistoryList } from '@/components/HistoryList';
+import { ProbeResult } from '@/components/ProbeResult';
+import { SettingsPage } from '@/components/SettingsPage';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { addHistoryEntry, checkDuplicateDownload } from '@/lib/history';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { openPath } from '@tauri-apps/plugin-opener';
+import { Download, History, Settings } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useLocale, useTranslations } from 'use-intl';
 
-type Tab = "home" | "history" | "settings";
+type Tab = 'home' | 'history' | 'settings';
 
 interface FormatInfo {
   id: string;
@@ -51,18 +51,20 @@ interface DownloadFailed {
 }
 
 function App() {
-  const t = useTranslations("hero");
+  const t = useTranslations('hero');
   const locale = useLocale();
-  const [tab, setTab] = useState<Tab>("home");
+  const [tab, setTab] = useState<Tab>('home');
 
   // Download state machine
-  const [stage, setStage] = useState<"idle" | "probing" | "probed" | "downloading" | "done" | "error">("idle");
-  const [url, setUrl] = useState("");
+  const [stage, setStage] = useState<
+    'idle' | 'probing' | 'probed' | 'downloading' | 'done' | 'error'
+  >('idle');
+  const [url, setUrl] = useState('');
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
-  const [selectedFormat, setSelectedFormat] = useState("best");
+  const [selectedFormat, setSelectedFormat] = useState('best');
   const [downloadPercent, setDownloadPercent] = useState(0);
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState('');
   const [outputFile, setOutputFile] = useState<string | undefined>();
 
   // Duplicate dialog
@@ -72,27 +74,32 @@ function App() {
     resolution?: string;
     downloadedAt: string;
   } | null>(null);
-  const [pendingDupDownload, setPendingDupDownload] = useState<(() => void) | null>(null);
+  const [pendingDupDownload, setPendingDupDownload] = useState<
+    (() => void) | null
+  >(null);
 
   // Clipboard detection
   const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
 
   // Settings
   const [language, setLanguage] = useState<string>(locale);
-  const [theme, setTheme] = useState("system");
-  const [downloadDir, setDownloadDir] = useState("");
+  const [theme, setTheme] = useState('system');
+  const [downloadDir, setDownloadDir] = useState('');
   const [concurrent, setConcurrent] = useState(5);
 
   // Listen for download events
   useEffect(() => {
-    const unlisten1 = listen<DownloadProgress>("download-progress", (event) => {
+    const unlisten1 = listen<DownloadProgress>('download-progress', (event) => {
       setDownloadPercent(event.payload.percent);
-      if (event.payload.stage === "downloading" || event.payload.stage === "probing") {
-        setStage("downloading");
+      if (
+        event.payload.stage === 'downloading' ||
+        event.payload.stage === 'probing'
+      ) {
+        setStage('downloading');
       }
     });
-    const unlisten2 = listen<DownloadComplete>("download-complete", (event) => {
-      setStage("done");
+    const unlisten2 = listen<DownloadComplete>('download-complete', (event) => {
+      setStage('done');
       setOutputFile(event.payload.output_file);
       if (event.payload.title && url) {
         addHistoryEntry({
@@ -100,15 +107,16 @@ function App() {
           url,
           title: event.payload.title,
           formatId: selectedFormat,
-          resolution: videoInfo?.formats.find((f) => f.id === selectedFormat)?.resolution,
+          resolution: videoInfo?.formats.find((f) => f.id === selectedFormat)
+            ?.resolution,
           outputFile: event.payload.output_file,
-          status: "done",
+          status: 'done',
           downloadedAt: new Date().toISOString(),
         }).catch(console.error);
       }
     });
-    const unlisten3 = listen<DownloadFailed>("download-failed", (event) => {
-      setStage("error");
+    const unlisten3 = listen<DownloadFailed>('download-failed', (event) => {
+      setStage('error');
       setErrorMsg(event.payload.error);
     });
     return () => {
@@ -123,15 +131,15 @@ function App() {
     const cleanUrl = inputUrl.trim();
     if (!cleanUrl) return;
     setUrl(cleanUrl);
-    setStage("probing");
+    setStage('probing');
     setDownloadPercent(0);
-    setErrorMsg("");
+    setErrorMsg('');
     try {
-      const info: VideoInfo = await invoke("probe_url", { url: cleanUrl });
+      const info: VideoInfo = await invoke('probe_url', { url: cleanUrl });
       setVideoInfo(info);
-      setStage("probed");
+      setStage('probed');
     } catch (e) {
-      setStage("error");
+      setStage('error');
       setErrorMsg(String(e));
     }
   }, []);
@@ -160,35 +168,35 @@ function App() {
   }, [url, videoInfo, selectedFormat]);
 
   async function doDownload() {
-    setStage("downloading");
+    setStage('downloading');
     setDownloadPercent(0);
     try {
-      const jobId: string = await invoke("start_download", {
+      const jobId: string = await invoke('start_download', {
         url,
-        formatId: selectedFormat === "best" ? null : selectedFormat,
+        formatId: selectedFormat === 'best' ? null : selectedFormat,
       });
       setCurrentJobId(jobId);
     } catch (e) {
-      setStage("error");
+      setStage('error');
       setErrorMsg(String(e));
     }
   }
 
   const handleReset = useCallback(() => {
-    setStage("idle");
-    setUrl("");
+    setStage('idle');
+    setUrl('');
     setVideoInfo(null);
-    setSelectedFormat("best");
+    setSelectedFormat('best');
     setDownloadPercent(0);
     setCurrentJobId(null);
-    setErrorMsg("");
+    setErrorMsg('');
     setOutputFile(undefined);
   }, []);
 
   const handleCancelDownload = useCallback(async () => {
     if (currentJobId) {
       try {
-        await invoke("cancel_download", { jobId: currentJobId });
+        await invoke('cancel_download', { jobId: currentJobId });
       } catch (e) {
         console.error(e);
       }
@@ -198,7 +206,7 @@ function App() {
 
   const handleOpenFolder = useCallback(() => {
     if (outputFile) {
-      const dir = outputFile.split("/").slice(0, -1).join("/") || "/";
+      const dir = outputFile.split('/').slice(0, -1).join('/') || '/';
       openPath(dir).catch(() => {});
     }
   }, [outputFile]);
@@ -206,12 +214,12 @@ function App() {
   // Keyboard shortcut: Escape to cancel
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && stage === "downloading") {
+      if (e.key === 'Escape' && stage === 'downloading') {
         handleCancelDownload();
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [stage, handleCancelDownload]);
 
   return (
@@ -220,31 +228,31 @@ function App() {
         <h1 className="text-2xl font-bold">EasyTube</h1>
         <nav className="flex gap-1" role="tablist">
           <Button
-            variant={tab === "home" ? "secondary" : "ghost"}
+            variant={tab === 'home' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => setTab("home")}
+            onClick={() => setTab('home')}
             role="tab"
-            aria-selected={tab === "home"}
+            aria-selected={tab === 'home'}
           >
             <Download className="mr-1 h-4 w-4" />
             Home
           </Button>
           <Button
-            variant={tab === "history" ? "secondary" : "ghost"}
+            variant={tab === 'history' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => setTab("history")}
+            onClick={() => setTab('history')}
             role="tab"
-            aria-selected={tab === "history"}
+            aria-selected={tab === 'history'}
           >
             <History className="mr-1 h-4 w-4" />
             History
           </Button>
           <Button
-            variant={tab === "settings" ? "secondary" : "ghost"}
+            variant={tab === 'settings' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => setTab("settings")}
+            onClick={() => setTab('settings')}
             role="tab"
-            aria-selected={tab === "settings"}
+            aria-selected={tab === 'settings'}
           >
             <Settings className="mr-1 h-4 w-4" />
             Settings
@@ -253,8 +261,8 @@ function App() {
       </header>
 
       <main className="flex-1 flex flex-col items-center px-4 py-8">
-        {tab === "history" && <HistoryList />}
-        {tab === "settings" && (
+        {tab === 'history' && <HistoryList />}
+        {tab === 'settings' && (
           <SettingsPage
             language={language}
             theme={theme}
@@ -264,22 +272,22 @@ function App() {
             onThemeChange={setTheme}
             onDownloadDirChange={setDownloadDir}
             onConcurrentChange={setConcurrent}
-            onClose={() => setTab("home")}
+            onClose={() => setTab('home')}
           />
         )}
 
-        {tab === "home" && (
+        {tab === 'home' && (
           <>
-            {stage === "idle" && (
+            {stage === 'idle' && (
               <Card className="w-full max-w-2xl">
                 <CardContent className="flex flex-col gap-6 pt-8">
                   <h2 className="text-3xl font-semibold text-center leading-tight">
-                    {t("description")}
+                    {t('description')}
                   </h2>
                   <div className="flex gap-3">
                     <Input
                       className="text-lg h-14 px-4"
-                      placeholder={t("placeholder")}
+                      placeholder={t('placeholder')}
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
                       onPaste={(e) => {
@@ -288,8 +296,8 @@ function App() {
                           if (pasted) handleProbe(pasted);
                         }, 100);
                       }}
-                      onKeyDown={(e) => e.key === "Enter" && handleProbe(url)}
-                      aria-label={t("placeholder")}
+                      onKeyDown={(e) => e.key === 'Enter' && handleProbe(url)}
+                      aria-label={t('placeholder')}
                       autoFocus
                     />
                     <Button
@@ -299,13 +307,15 @@ function App() {
                       disabled={!url.trim()}
                     >
                       <Download className="mr-2 h-5 w-5" />
-                      {t("download")}
+                      {t('download')}
                     </Button>
                   </div>
                   <div className="flex justify-center">
                     <ClipboardToggle
                       onToggle={async (enabled) => {
-                        await invoke("set_clipboard_enabled", { enabled }).catch(() => {});
+                        await invoke('set_clipboard_enabled', {
+                          enabled,
+                        }).catch(() => {});
                       }}
                     />
                   </div>
@@ -313,9 +323,9 @@ function App() {
               </Card>
             )}
 
-            {stage === "probing" && <DownloadStatus stage="probing" />}
+            {stage === 'probing' && <DownloadStatus stage="probing" />}
 
-            {stage === "probed" && videoInfo && (
+            {stage === 'probed' && videoInfo && (
               <ProbeResult
                 title={videoInfo.title}
                 thumbnail={videoInfo.thumbnail}
@@ -328,7 +338,7 @@ function App() {
               />
             )}
 
-            {stage === "downloading" && (
+            {stage === 'downloading' && (
               <DownloadStatus
                 stage="downloading"
                 title={videoInfo?.title}
@@ -338,7 +348,7 @@ function App() {
               />
             )}
 
-            {stage === "done" && (
+            {stage === 'done' && (
               <DownloadStatus
                 stage="done"
                 title={videoInfo?.title}
@@ -347,13 +357,11 @@ function App() {
               />
             )}
 
-            {stage === "error" && (
+            {stage === 'error' && (
               <DownloadStatus
                 stage="error"
                 error={errorMsg}
-                onRetry={
-                  videoInfo ? handleDownload : () => handleProbe(url)
-                }
+                onRetry={videoInfo ? handleDownload : () => handleProbe(url)}
                 onReset={handleReset}
               />
             )}
@@ -363,9 +371,9 @@ function App() {
 
       <DuplicateDialog
         open={dupOpen}
-        title={dupInfo?.title ?? ""}
+        title={dupInfo?.title ?? ''}
         resolution={dupInfo?.resolution}
-        downloadedAt={dupInfo?.downloadedAt ?? ""}
+        downloadedAt={dupInfo?.downloadedAt ?? ''}
         onRedownload={() => {
           setDupOpen(false);
           pendingDupDownload?.();

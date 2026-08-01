@@ -1,4 +1,4 @@
-import { useTranslations } from "use-intl";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,9 +6,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Download, X } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Download, X } from 'lucide-react';
+import { useTranslations } from 'use-intl';
 
 interface DetectedDialogProps {
   open: boolean;
@@ -27,17 +27,17 @@ export function DetectedDialog({
   onDismiss,
   onBlockDomain,
 }: DetectedDialogProps) {
-  const t = useTranslations("clipboard");
+  const t = useTranslations('clipboard');
 
-  const displayUrl = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const displayUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
   const truncatedUrl =
-    displayUrl.length > 50 ? displayUrl.slice(0, 47) + "..." : displayUrl;
+    displayUrl.length > 50 ? `${displayUrl.slice(0, 47)}...` : displayUrl;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onDismiss()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl">{t("detected")}</DialogTitle>
+          <DialogTitle className="text-xl">{t('detected')}</DialogTitle>
           <DialogDescription className="text-base">
             {title ?? truncatedUrl}
           </DialogDescription>
@@ -49,14 +49,11 @@ export function DetectedDialog({
             className="h-12"
           >
             <X className="mr-2 h-5 w-5" />
-            {t("no")}
+            {t('no')}
           </Button>
-          <Button
-            onClick={() => onDownload(url)}
-            className="h-12 flex-1"
-          >
+          <Button onClick={() => onDownload(url)} className="h-12 flex-1">
             <Download className="mr-2 h-5 w-5" />
-            {t("yes")}
+            {t('yes')}
           </Button>
         </DialogFooter>
       </DialogContent>

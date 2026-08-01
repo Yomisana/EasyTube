@@ -43,8 +43,14 @@ impl Default for DownloadSettings {
 #[derive(Debug, Clone, Serialize)]
 pub enum DownloadEvent {
     Progress(DownloadProgress),
-    Complete { job_id: String, output_path: Option<String> },
-    Failed { job_id: String, error: String },
+    Complete {
+        job_id: String,
+        output_path: Option<String>,
+    },
+    Failed {
+        job_id: String,
+        error: String,
+    },
 }
 
 impl DownloadManager {
@@ -122,8 +128,8 @@ impl DownloadManager {
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let raw: serde_json::Value = serde_json::from_str(&stdout)
-            .map_err(|e| format!("parse probe: {}", e))?;
+        let raw: serde_json::Value =
+            serde_json::from_str(&stdout).map_err(|e| format!("parse probe: {}", e))?;
 
         let title = raw["title"].as_str().unwrap_or(url).to_string();
         let thumbnail = raw["thumbnail"].as_str().map(|s| s.to_string());
@@ -139,7 +145,13 @@ impl DownloadManager {
                         let resolution = f["resolution"].as_str().map(|s| s.to_string());
                         let note = format_note(f);
                         let filesize = f["filesize"].as_i64();
-                        Some(FormatInfo { id, ext, resolution, filesize, note })
+                        Some(FormatInfo {
+                            id,
+                            ext,
+                            resolution,
+                            filesize,
+                            note,
+                        })
                     })
                     .collect()
             })
@@ -210,14 +222,32 @@ fn format_duration(seconds: u64) -> String {
     let h = seconds / 3600;
     let m = (seconds % 3600) / 60;
     let s = seconds % 60;
-    if h > 0 { format!("{}:{:02}:{:02}", h, m, s) } else { format!("{}:{:02}", m, s) }
+    if h > 0 {
+        format!("{}:{:02}:{:02}", h, m, s)
+    } else {
+        format!("{}:{:02}", m, s)
+    }
 }
 
 fn format_note(f: &serde_json::Value) -> Option<String> {
     let mut parts = Vec::new();
-    if let Some(res) = f["resolution"].as_str() { parts.push(res.to_string()); }
-    if let Some(fps) = f["fps"].as_f64() { parts.push(format!("{:.0}fps", fps)); }
-    if let Some(abr) = f["abr"].as_f64() { parts.push(format!("{:.0}kbps", abr)); }
-    if let Some(vc) = f["vcodec"].as_str() { if vc != "none" { parts.push(vc.to_string()); } }
-    if parts.is_empty() { None } else { Some(parts.join(" | ")) }
+    if let Some(res) = f["resolution"].as_str() {
+        parts.push(res.to_string());
+    }
+    if let Some(fps) = f["fps"].as_f64() {
+        parts.push(format!("{:.0}fps", fps));
+    }
+    if let Some(abr) = f["abr"].as_f64() {
+        parts.push(format!("{:.0}kbps", abr));
+    }
+    if let Some(vc) = f["vcodec"].as_str() {
+        if vc != "none" {
+            parts.push(vc.to_string());
+        }
+    }
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join(" | "))
+    }
 }

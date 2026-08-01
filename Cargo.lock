@@ -1074,6 +1074,7 @@ dependencies = [
 name = "easytube-mcp"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "easytube-core",
  "serde",
  "serde_json",

@@ -1,18 +1,18 @@
-export type Locale = "zh-TW" | "zh-CN" | "en";
+export type Locale = 'zh-TW' | 'zh-CN' | 'en';
 
-export const locales: Locale[] = ["zh-TW", "zh-CN", "en"];
+export const locales: Locale[] = ['zh-TW', 'zh-CN', 'en'];
 
-export const defaultLocale: Locale = "zh-TW";
+export const defaultLocale: Locale = 'zh-TW';
 
 export function getLocaleFromSystem(): Locale {
   const lang = navigator.language;
-  if (lang.startsWith("zh")) {
-    if (lang.includes("TW") || lang.includes("HK") || lang.includes("Hant")) {
-      return "zh-TW";
+  if (lang.startsWith('zh')) {
+    if (lang.includes('TW') || lang.includes('HK') || lang.includes('Hant')) {
+      return 'zh-TW';
     }
-    return "zh-CN";
+    return 'zh-CN';
   }
-  return "en";
+  return 'en';
 }
 
 export async function getMessages(locale: Locale) {

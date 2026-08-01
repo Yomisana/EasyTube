@@ -1,13 +1,13 @@
-import { useState, useCallback } from "react";
-import { useTranslations } from "use-intl";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from '@/components/ui/switch';
+import { useCallback, useState } from 'react';
+import { useTranslations } from 'use-intl';
 
 interface ClipboardToggleProps {
   onToggle?: (enabled: boolean) => void;
 }
 
 export function ClipboardToggle({ onToggle }: ClipboardToggleProps) {
-  const t = useTranslations("clipboard");
+  const t = useTranslations('clipboard');
   const [enabled, setEnabled] = useState(false);
 
   const handleChange = useCallback(
@@ -29,7 +29,7 @@ export function ClipboardToggle({ onToggle }: ClipboardToggleProps) {
         htmlFor="clipboard-monitor"
         className="text-sm font-medium leading-none cursor-pointer select-none"
       >
-        {t("toggle")}
+        {t('toggle')}
       </label>
     </div>
   );

@@ -24,9 +24,15 @@ impl ClipboardMonitor {
             "twitch.tv".into(),
         ];
         let default_tracking = vec![
-            "utm_source".into(), "utm_medium".into(), "utm_campaign".into(),
-            "utm_term".into(), "utm_content".into(), "fbclid".into(),
-            "gclid".into(), "igshid".into(), "ref".into(),
+            "utm_source".into(),
+            "utm_medium".into(),
+            "utm_campaign".into(),
+            "utm_term".into(),
+            "utm_content".into(),
+            "fbclid".into(),
+            "gclid".into(),
+            "igshid".into(),
+            "ref".into(),
         ];
         Self {
             enabled: Arc::new(RwLock::new(false)),

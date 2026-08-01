@@ -1,7 +1,7 @@
-import { useTranslations } from "use-intl";
-import { Download, Film, Music, ChevronDown } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ChevronDown, Download, Film, Music } from 'lucide-react';
+import { useTranslations } from 'use-intl';
 
 interface FormatInfo {
   id: string;
@@ -31,14 +31,18 @@ export function ProbeResult({
   onDownload,
   onCancel,
 }: ProbeResultProps) {
-  const t = useTranslations("hero");
+  const t = useTranslations('hero');
 
   const bestFormats = formats.filter(
     (f) =>
-      f.resolution && ["2160", "1440", "1080", "720", "480"].includes(f.resolution) && f.ext === "mp4",
+      f.resolution &&
+      ['2160', '1440', '1080', '720', '480'].includes(f.resolution) &&
+      f.ext === 'mp4',
   );
 
-  const audioFormats = formats.filter((f) => f.ext === "m4a" || f.ext === "mp3");
+  const audioFormats = formats.filter(
+    (f) => f.ext === 'm4a' || f.ext === 'mp3',
+  );
   const hasMore = formats.length > bestFormats.length + audioFormats.length;
 
   return (
@@ -63,19 +67,19 @@ export function ProbeResult({
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">{t("quality")}</p>
+          <p className="text-sm font-medium">{t('quality')}</p>
           <div className="flex flex-wrap gap-2">
             <Button
-              variant={selectedFormat === "best" ? "default" : "outline"}
+              variant={selectedFormat === 'best' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => onSelectFormat("best")}
+              onClick={() => onSelectFormat('best')}
             >
-              {t("best")}
+              {t('best')}
             </Button>
             {bestFormats.map((f) => (
               <Button
                 key={f.id}
-                variant={selectedFormat === f.id ? "default" : "outline"}
+                variant={selectedFormat === f.id ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => onSelectFormat(f.id)}
               >
@@ -85,7 +89,9 @@ export function ProbeResult({
             ))}
             {audioFormats.length > 0 && (
               <Button
-                variant={selectedFormat === audioFormats[0].id ? "default" : "outline"}
+                variant={
+                  selectedFormat === audioFormats[0].id ? 'default' : 'outline'
+                }
                 size="sm"
                 onClick={() => onSelectFormat(audioFormats[0].id)}
               >
@@ -108,7 +114,7 @@ export function ProbeResult({
           </Button>
           <Button onClick={onDownload} className="h-12 flex-1 text-lg">
             <Download className="mr-2 h-5 w-5" />
-            {t("download")}
+            {t('download')}
           </Button>
         </div>
       </CardContent>

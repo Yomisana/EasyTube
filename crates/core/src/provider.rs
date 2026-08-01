@@ -25,18 +25,16 @@ impl BinaryProvider {
                 info!(path = %p.display(), "using custom yt-dlp");
                 Some(p.clone())
             }
-            ProviderType::System => {
-                match which::which("yt-dlp") {
-                    Ok(p) => {
-                        info!(path = %p.display(), "found system yt-dlp");
-                        Some(p)
-                    }
-                    Err(_) => {
-                        debug!("yt-dlp not found on PATH");
-                        None
-                    }
+            ProviderType::System => match which::which("yt-dlp") {
+                Ok(p) => {
+                    info!(path = %p.display(), "found system yt-dlp");
+                    Some(p)
                 }
-            }
+                Err(_) => {
+                    debug!("yt-dlp not found on PATH");
+                    None
+                }
+            },
             _ => {
                 let path = app_data_ytdlp();
                 if path.exists() {
@@ -52,21 +50,23 @@ impl BinaryProvider {
     pub fn find_ffmpeg(preferred: &ProviderType) -> Option<PathBuf> {
         match preferred {
             ProviderType::Custom(p) if p.exists() => Some(p.clone()),
-            ProviderType::System => {
-                match which::which("ffmpeg") {
-                    Ok(p) => {
-                        info!(path = %p.display(), "found system ffmpeg");
-                        Some(p)
-                    }
-                    Err(_) => {
-                        debug!("ffmpeg not found on PATH");
-                        None
-                    }
+            ProviderType::System => match which::which("ffmpeg") {
+                Ok(p) => {
+                    info!(path = %p.display(), "found system ffmpeg");
+                    Some(p)
                 }
-            }
+                Err(_) => {
+                    debug!("ffmpeg not found on PATH");
+                    None
+                }
+            },
             _ => {
                 let path = app_data_ffmpeg();
-                if path.exists() { Some(path) } else { None }
+                if path.exists() {
+                    Some(path)
+                } else {
+                    None
+                }
             }
         }
     }
@@ -164,10 +164,7 @@ async fn download_file(url: &str) -> Result<Vec<u8>, String> {
         .map_err(|e| format!("download failed: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!(
-            "download returned HTTP {}",
-            response.status()
-        ));
+        return Err(format!("download returned HTTP {}", response.status()));
     }
 
     response
@@ -185,8 +182,7 @@ fn set_executable(path: &Path) -> Result<(), String> {
             .map_err(|e| format!("metadata: {}", e))?
             .permissions();
         perms.set_mode(perms.mode() | 0o111);
-        std::fs::set_permissions(path, perms)
-            .map_err(|e| format!("chmod: {}", e))?;
+        std::fs::set_permissions(path, perms).map_err(|e| format!("chmod: {}", e))?;
     }
     Ok(())
 }

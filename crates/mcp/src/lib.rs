@@ -1,6 +1,8 @@
 use std::io::{self, BufRead, Write};
 
+use easytube_core::history::{add_history_entry, HistoryEntry};
 use easytube_core::provider::{BinaryProvider, ProviderType};
+use easytube_core::settings::{get_setting, set_setting};
 use easytube_core::state::{DownloadManager, DownloadSettings};
 use easytube_core::types::JobStatus;
 use serde_json::{json, Value};
@@ -179,27 +181,14 @@ fn tool_def(name: &str, description: &str, input_schema: Value) -> Value {
     })
 }
 
-async fn handle_call_tool(
-    id: Value,
-    params: &Value,
-    manager: Arc<DownloadManager>,
-) -> Value {
-    let name = params
-        .get("name")
-        .and_then(|n| n.as_str())
-        .unwrap_or("");
+async fn handle_call_tool(id: Value, params: &Value, manager: Arc<DownloadManager>) -> Value {
+    let name = params.get("name").and_then(|n| n.as_str()).unwrap_or("");
 
-    let arguments = params
-        .get("arguments")
-        .cloned()
-        .unwrap_or(Value::Null);
+    let arguments = params.get("arguments").cloned().unwrap_or(Value::Null);
 
     let result = match name {
         "easytube_probe" => {
-            let url = arguments
-                .get("url")
-                .and_then(|u| u.as_str())
-                .unwrap_or("");
+            let url = arguments.get("url").and_then(|u| u.as_str()).unwrap_or("");
             match manager.probe(url).await {
                 Ok(info) => serde_json::to_string_pretty(&info).unwrap(),
                 Err(e) => format!("Error: {}", e),
@@ -258,12 +247,14 @@ async fn handle_call_tool(
             format!("Job {} cancelled", job_id)
         }
         "easytube_settings" => {
-            let key = arguments
-                .get("key")
-                .and_then(|k| k.as_str())
-                .unwrap_or("");
-            let _value = arguments.get("value").and_then(|v| v.as_str());
-            format!("Settings for '{}': not yet persisted", key)
+            let key = arguments.get("key").and_then(|k| k.as_str()).unwrap_or("");
+            match arguments.get("value").and_then(|v| v.as_str()) {
+                Some(value) => match set_setting(key, value) {
+                    Ok(()) => format!("Set '{}' = '{}'", key, value),
+                    Err(e) => format!("Error: {}", e),
+                },
+                None => format!("{} = {}", key, get_setting(key)),
+            }
         }
         _ => format!("Unknown tool: {}", name),
     };
@@ -289,8 +280,15 @@ async fn start_download_task(manager: &Arc<DownloadManager>, job_id: &str) -> Re
     manager.update_status(job_id, JobStatus::Downloading).await;
     let title = info.title.clone();
 
+    let resolution = info
+        .formats
+        .iter()
+        .find(|f| Some(f.id.as_str()) == job.format_id.as_deref())
+        .and_then(|f| f.resolution.clone());
+
     let out_dir = job
         .output_dir
+        .clone()
         .unwrap_or_else(|| manager.output_dir().clone())
         .to_string_lossy()
         .to_string();
@@ -313,6 +311,16 @@ async fn start_download_task(manager: &Arc<DownloadManager>, job_id: &str) -> Re
     match output {
         Ok(o) if o.status.success() => {
             manager.update_status(job_id, JobStatus::Done).await;
+            let _ = add_history_entry(&HistoryEntry {
+                job_id: job_id.to_string(),
+                url: job.url.clone(),
+                title: title.clone(),
+                format_id: job.format_id.clone(),
+                resolution,
+                output_file: None,
+                status: "done".into(),
+                downloaded_at: chrono::Utc::now().to_rfc3339(),
+            });
             eprintln!("MCP download done: {}", title);
             Ok(())
         }
