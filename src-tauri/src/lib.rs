@@ -58,7 +58,6 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
-            
             let _tray = app.tray_by_id("easytube-tray");
             Ok(())
         })
