@@ -69,8 +69,7 @@ jobs:
       - name: Build Tauri (installer + bundles)
         shell: bash
         run: |
-          cd src-tauri
-          cargo tauri build --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+          pnpm tauri build --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
 
       - name: Package macOS portable (zip .app)
         if: matrix.os == 'macos'
