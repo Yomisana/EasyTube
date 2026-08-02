@@ -32,9 +32,7 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "dmg": {
-        "appFolderName": "easytube"
-      }
+      "minimumSystemVersion": "11.0"
     },
     "linux": {
       "deb": {
