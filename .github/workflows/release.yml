@@ -20,18 +20,22 @@ jobs:
             target: aarch64-apple-darwin
             os: macos
             arch: arm64
+            bundles: "dmg,app"
           - platform: macos-14
             target: x86_64-apple-darwin
             os: macos
             arch: x64
+            bundles: "dmg,app"
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
             os: windows
             arch: x64
+            bundles: "msi,nsis"
           - platform: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
             os: linux
             arch: x64
+            bundles: "deb,appimage"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -54,22 +58,51 @@ jobs:
 
       - run: pnpm install --no-frozen-lockfile --ignore-scripts
 
+      - run: pnpm build
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Tauri (installer + bundles)
+        shell: bash
+        run: |
+          cd src-tauri
+          cargo tauri build --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+
+      - name: Package macOS portable (zip .app)
+        if: matrix.os == 'macos'
+        shell: bash
+        run: |
+          DIR="src-tauri/target/${{ matrix.target }}/release/bundle/macos"
+          APP=$(ls "$DIR"/*.app 2>/dev/null | head -1)
+          [ -n "$APP" ] && ditto -c -k --keepParent "$APP" "easytube-macos-${{ matrix.arch }}-portable.zip"
+
+      - name: Package Windows portable (zip release dir)
+        if: matrix.os == 'windows'
+        shell: pwsh
+        run: |
+          $src = "src-tauri/target/${{ matrix.target }}/release"
+          Get-ChildItem $src -File | Where-Object { $_.Extension -notin '.pdb', '.lib', '.exp' } |
+            Compress-Archive -DestinationPath "easytube-windows-x64-portable.zip"
+
+      - name: Package Linux portable (copy AppImage)
+        if: matrix.os == 'linux'
+        shell: bash
+        run: |
+          DIR="src-tauri/target/${{ matrix.target }}/release/bundle/appimage"
+          IMG=$(ls "$DIR"/*.AppImage 2>/dev/null | head -1)
+          [ -n "$IMG" ] && cp "$IMG" "easytube-linux-${{ matrix.arch }}-portable.AppImage"
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
         with:
-          args: --target ${{ matrix.target }}
-          tagName: v__VERSION__
-          releaseName: "EasyTube v__VERSION__"
-          releaseBody: |
-            ## EasyTube v__VERSION__
+          tag_name: ${{ github.ref_name }}
+          name: "EasyTube ${{ github.ref_name }}"
+          body: |
+            ## EasyTube ${{ github.ref_name }}
 
             A desktop YouTube/Bilibili downloader with MCP server support.
 
@@ -89,45 +122,14 @@ jobs:
             | Linux | `.AppImage` — `chmod +x` and run |
 
             See [README](https://github.com/Yomisana/EasyTube#readme) for setup instructions.
-          releaseDraft: true
+          draft: true
           prerelease: false
-
-      - name: Package macOS portable (zip .app)
-        if: matrix.os == 'macos'
-        shell: bash
-        run: |
-          cd src-tauri/target/${{ matrix.target }}/release/bundle/macos
-          APP=$(ls *.app 2>/dev/null | head -1)
-          if [ -n "$APP" ]; then
-            ditto -c -k --keepParent "$APP" "../../easytube-macos-${{ matrix.arch }}-portable.zip"
-          fi
-
-      - name: Package Windows portable (zip release dir)
-        if: matrix.os == 'windows'
-        shell: pwsh
-        run: |
-          $target = "${{ matrix.target }}"
-          $src = "src-tauri/target/$target/release"
-          $dest = "$src/easytube-windows-x64-portable.zip"
-          Get-ChildItem $src -File |
-            Where-Object { $_.Extension -notin '.pdb', '.lib', '.exp' } |
-            Compress-Archive -DestinationPath $dest
-
-      - name: Package Linux portable (rename AppImage)
-        if: matrix.os == 'linux'
-        shell: bash
-        run: |
-          cd src-tauri/target/${{ matrix.target }}/release/bundle/appimage
-          APPIMAGE=$(ls *.AppImage 2>/dev/null | head -1)
-          if [ -n "$APPIMAGE" ]; then
-            cp "$APPIMAGE" "../../easytube-linux-${{ matrix.arch }}-portable.AppImage"
-          fi
-
-      - name: Upload portable artifacts
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
           files: |
-            src-tauri/target/${{ matrix.target }}/release/easytube-*-portable.*
+            src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+            src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi
+            src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
+            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+            easytube-*-portable.*
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
