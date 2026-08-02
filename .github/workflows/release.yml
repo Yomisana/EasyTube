@@ -75,25 +75,45 @@ jobs:
         if: matrix.os == 'macos'
         shell: bash
         run: |
-          DIR="src-tauri/target/${{ matrix.target }}/release/bundle/macos"
-          APP=$(ls "$DIR"/*.app 2>/dev/null | head -1)
-          [ -n "$APP" ] && ditto -c -k --keepParent "$APP" "easytube-macos-${{ matrix.arch }}-portable.zip"
+          echo "=== Listing bundle directories ==="
+          find src-tauri/target -name "*.app" -type d 2>/dev/null || true
+          find src-tauri/target -name "*.dmg" -type f 2>/dev/null || true
+          APP=$(find src-tauri/target -name "*.app" -type d 2>/dev/null | head -1)
+          if [ -n "$APP" ]; then
+            echo "Found app: $APP"
+            ditto -c -k --keepParent "$APP" "easytube-macos-${{ matrix.arch }}-portable.zip"
+          else
+            echo "No .app found in target dir, skipping portable zip"
+          fi
 
       - name: Package Windows portable (zip release dir)
         if: matrix.os == 'windows'
         shell: pwsh
         run: |
+          Write-Host "=== Listing bundle directories ==="
+          Get-ChildItem src-tauri/target -Recurse -Include "*.msi","*.exe" -ErrorAction SilentlyContinue | Select-Object FullName
           $src = "src-tauri/target/${{ matrix.target }}/release"
-          Get-ChildItem $src -File | Where-Object { $_.Extension -notin '.pdb', '.lib', '.exp' } |
-            Compress-Archive -DestinationPath "easytube-windows-x64-portable.zip"
+          if (Test-Path $src) {
+            Get-ChildItem $src -File -ErrorAction SilentlyContinue |
+              Where-Object { $_.Extension -notin '.pdb', '.lib', '.exp' } |
+              Compress-Archive -DestinationPath "easytube-windows-x64-portable.zip"
+          } else {
+            Write-Host "$src not found, skipping"
+          }
 
       - name: Package Linux portable (copy AppImage)
         if: matrix.os == 'linux'
         shell: bash
         run: |
-          DIR="src-tauri/target/${{ matrix.target }}/release/bundle/appimage"
-          IMG=$(ls "$DIR"/*.AppImage 2>/dev/null | head -1)
-          [ -n "$IMG" ] && cp "$IMG" "easytube-linux-${{ matrix.arch }}-portable.AppImage"
+          echo "=== Listing bundle directories ==="
+          find src-tauri/target -name "*.AppImage" -o -name "*.deb" 2>/dev/null || true
+          IMG=$(find src-tauri/target -name "*.AppImage" 2>/dev/null | head -1)
+          if [ -n "$IMG" ]; then
+            echo "Found AppImage: $IMG"
+            cp "$IMG" "easytube-linux-${{ matrix.arch }}-portable.AppImage"
+          else
+            echo "No AppImage found, skipping"
+          fi
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
@@ -124,11 +144,12 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-            src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi
-            src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
-            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+            src-tauri/target/**/release/bundle/dmg/*.dmg
+            src-tauri/target/**/release/bundle/msi/*.msi
+            src-tauri/target/**/release/bundle/nsis/*.exe
+            src-tauri/target/**/release/bundle/deb/*.deb
             easytube-*-portable.*
+            src-tauri/target/**/release/bundle/appimage/*.AppImage
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
