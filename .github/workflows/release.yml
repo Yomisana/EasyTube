@@ -15,16 +15,20 @@ jobs:
         include:
           - platform: macos-latest
             target: aarch64-apple-darwin
-            artifact: dmg
+            os: macos
+            arch: arm64
           - platform: macos-14
             target: x86_64-apple-darwin
-            artifact: dmg
+            os: macos
+            arch: x64
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: msi
+            os: windows
+            arch: x64
           - platform: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
-            artifact: deb
+            os: linux
+            arch: x64
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -37,8 +41,8 @@ jobs:
           node-version: 22
           cache: "pnpm"
 
-      - name: Install dependencies (ubuntu)
-        if: matrix.platform == 'ubuntu-24.04'
+      - name: Install deps (ubuntu)
+        if: matrix.os == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -61,6 +65,66 @@ jobs:
           args: --target ${{ matrix.target }}
           tagName: v__VERSION__
           releaseName: "EasyTube v__VERSION__"
-          releaseBody: "See CHANGELOG.md for details."
+          releaseBody: |
+            ## EasyTube v__VERSION__
+
+            A desktop YouTube/Bilibili downloader with MCP server support.
+
+            ### Installer downloads
+            | Platform | File |
+            |---|---|
+            | macOS (Apple Silicon) | `.dmg` |
+            | macOS (Intel) | `.dmg` |
+            | Windows (x64) | `.msi` |
+            | Linux (x64) | `.deb` |
+
+            ### Portable downloads (no install needed)
+            | Platform | File |
+            |---|---|
+            | macOS | `.zip` — extract and run `easytube.app` |
+            | Windows | `.zip` — extract and run `easytube.exe` |
+            | Linux | `.AppImage` — `chmod +x` and run |
+
+            See [README](https://github.com/Yomisana/EasyTube#readme) for setup instructions.
           releaseDraft: true
           prerelease: false
+
+      - name: Package macOS portable (zip .app)
+        if: matrix.os == 'macos'
+        shell: bash
+        run: |
+          cd src-tauri/target/${{ matrix.target }}/release/bundle/macos
+          APP=$(ls *.app 2>/dev/null | head -1)
+          if [ -n "$APP" ]; then
+            ditto -c -k --keepParent "$APP" "../../easytube-macos-${{ matrix.arch }}-portable.zip"
+          fi
+
+      - name: Package Windows portable (zip release dir)
+        if: matrix.os == 'windows'
+        shell: pwsh
+        run: |
+          $target = "${{ matrix.target }}"
+          $src = "src-tauri/target/$target/release"
+          $dest = "$src/easytube-windows-x64-portable.zip"
+          Get-ChildItem $src -File |
+            Where-Object { $_.Extension -notin '.pdb', '.lib', '.exp' } |
+            Compress-Archive -DestinationPath $dest
+
+      - name: Package Linux portable (rename AppImage)
+        if: matrix.os == 'linux'
+        shell: bash
+        run: |
+          cd src-tauri/target/${{ matrix.target }}/release/bundle/appimage
+          APPIMAGE=$(ls *.AppImage 2>/dev/null | head -1)
+          if [ -n "$APPIMAGE" ]; then
+            cp "$APPIMAGE" "../../easytube-linux-${{ matrix.arch }}-portable.AppImage"
+          fi
+
+      - name: Upload portable artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            src-tauri/target/${{ matrix.target }}/release/easytube-*-portable.*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
