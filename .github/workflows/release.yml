@@ -69,6 +69,37 @@ jobs:
         run: |
           pnpm tauri build --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
 
+      - name: Rename installer files
+        shell: bash
+        run: |
+          V="${{ github.ref_name }}"
+          case "${{ matrix.os }}" in
+            macos)
+              for f in target/${{ matrix.target }}/release/bundle/dmg/*_${{ matrix.arch }}.dmg; do
+                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-macos-${{ matrix.arch }}.dmg"
+              done
+              for f in target/${{ matrix.target }}/release/bundle/macos/*_${{ matrix.arch }}.app.tar.gz; do
+                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-macos-${{ matrix.arch }}-app.tar.gz"
+              done
+              ;;
+            windows)
+              for f in target/${{ matrix.target }}/release/bundle/msi/*.msi; do
+                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-windows-x64.msi"
+              done
+              for f in target/${{ matrix.target }}/release/bundle/nsis/*.exe; do
+                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-windows-x64-setup.exe"
+              done
+              ;;
+            linux)
+              for f in target/${{ matrix.target }}/release/bundle/deb/*.deb; do
+                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-linux-x64.deb"
+              done
+              for f in target/${{ matrix.target }}/release/bundle/rpm/*.rpm 2>/dev/null; do
+                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-linux-x64.rpm"
+              done
+              ;;
+          esac
+
       - name: Package macOS portable (zip .app)
         if: matrix.os == 'macos'
         shell: bash
@@ -121,28 +152,28 @@ jobs:
             ### Installer downloads
             | Platform | File |
             |---|---|
-            | macOS (Apple Silicon) | `.dmg` |
-            | macOS (Intel) | `.dmg` |
-            | Windows (x64) | `.msi` |
-            | Linux (x64) | `.deb` |
+            | macOS (Apple Silicon) | `easytube-*-macos-arm64.dmg` |
+            | macOS (Intel) | `easytube-*-macos-x64.dmg` |
+            | Windows (x64) | `easytube-*-windows-x64.msi` / `-setup.exe` |
+            | Linux (x64) | `easytube-*-linux-x64.deb` / `.rpm` |
 
             ### Portable downloads (no install needed)
             | Platform | File |
             |---|---|
-            | macOS | `.zip` — extract and run `easytube.app` |
-            | Windows | `.zip` — extract and run `easytube.exe` |
-            | Linux | `.AppImage` — `chmod +x` and run |
+            | macOS | `easytube-*-macos-*-portable.zip` — extract and run |
+            | Windows | `easytube-*-windows-*-portable.zip` — extract and run |
+            | Linux | `easytube-*-linux-*-portable.AppImage` — `chmod +x` and run |
 
             See [README](https://github.com/Yomisana/EasyTube#readme) for setup instructions.
           draft: true
           prerelease: false
           files: |
-            target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-            target/${{ matrix.target }}/release/bundle/macos/*.app
-            target/${{ matrix.target }}/release/bundle/msi/*.msi
-            target/${{ matrix.target }}/release/bundle/nsis/*.exe
-            target/${{ matrix.target }}/release/bundle/deb/*.deb
-            target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
+            target/${{ matrix.target }}/release/bundle/dmg/easytube-*-macos-*.dmg
+            target/${{ matrix.target }}/release/bundle/macos/easytube-*-macos-*-app.tar.gz
+            target/${{ matrix.target }}/release/bundle/msi/easytube-*-windows-*.msi
+            target/${{ matrix.target }}/release/bundle/nsis/easytube-*-windows-*.exe
+            target/${{ matrix.target }}/release/bundle/deb/easytube-*-linux-*.deb
+            target/${{ matrix.target }}/release/bundle/rpm/easytube-*-linux-*.rpm
             easytube-*-portable.*
           fail_on_unmatched_files: false
         env:
