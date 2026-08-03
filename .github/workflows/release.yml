@@ -78,11 +78,15 @@ jobs:
           T="${{ matrix.target }}"
           case "${{ matrix.os }}" in
             macos)
-              for f in target/$T/release/bundle/dmg/*_${{ matrix.arch }}.dmg; do
-                mv "$f" "$(dirname "$f")/easytube-${V}-macos-${{ matrix.arch }}.dmg"
+              for f in target/$T/release/bundle/dmg/*_aarch64.dmg target/$T/release/bundle/dmg/*_x64.dmg; do
+                arch="aarch64"
+                [[ "$f" == *"_x64.dmg" ]] && arch="x64"
+                mv "$f" "$(dirname "$f")/easytube-${V}-macos-${arch}.dmg"
               done
-              for f in target/$T/release/bundle/macos/*_${{ matrix.arch }}.app.tar.gz; do
-                mv "$f" "$(dirname "$f")/easytube-${V}-macos-${{ matrix.arch }}-app.tar.gz"
+              for f in target/$T/release/bundle/macos/*_aarch64.app.tar.gz target/$T/release/bundle/macos/*_x64.app.tar.gz; do
+                arch="aarch64"
+                [[ "$f" == *"_x64.app.tar.gz" ]] && arch="x64"
+                mv "$f" "$(dirname "$f")/easytube-${V}-macos-${arch}-app.tar.gz"
               done
               ;;
             windows)
@@ -155,7 +159,7 @@ jobs:
             ### Installer downloads
             | Platform | File |
             |---|---|
-            | macOS (Apple Silicon) | `easytube-*-macos-arm64.dmg` |
+            | macOS (Apple Silicon) | `easytube-*-macos-aarch64.dmg` |
             | macOS (Intel) | `easytube-*-macos-x64.dmg` |
             | Windows (x64) | `easytube-*-windows-x64.msi` / `-setup.exe` |
             | Linux (x64) | `easytube-*-linux-x64.deb` / `.rpm` |
