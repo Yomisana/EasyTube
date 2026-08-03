@@ -72,30 +72,33 @@ jobs:
       - name: Rename installer files
         shell: bash
         run: |
+          set -e
+          shopt -s nullglob
           V="${{ github.ref_name }}"
+          T="${{ matrix.target }}"
           case "${{ matrix.os }}" in
             macos)
-              for f in target/${{ matrix.target }}/release/bundle/dmg/*_${{ matrix.arch }}.dmg; do
-                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-macos-${{ matrix.arch }}.dmg"
+              for f in target/$T/release/bundle/dmg/*_${{ matrix.arch }}.dmg; do
+                mv "$f" "$(dirname "$f")/easytube-${V}-macos-${{ matrix.arch }}.dmg"
               done
-              for f in target/${{ matrix.target }}/release/bundle/macos/*_${{ matrix.arch }}.app.tar.gz; do
-                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-macos-${{ matrix.arch }}-app.tar.gz"
+              for f in target/$T/release/bundle/macos/*_${{ matrix.arch }}.app.tar.gz; do
+                mv "$f" "$(dirname "$f")/easytube-${V}-macos-${{ matrix.arch }}-app.tar.gz"
               done
               ;;
             windows)
-              for f in target/${{ matrix.target }}/release/bundle/msi/*.msi; do
-                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-windows-x64.msi"
+              for f in target/$T/release/bundle/msi/*.msi; do
+                mv "$f" "$(dirname "$f")/easytube-${V}-windows-x64.msi"
               done
-              for f in target/${{ matrix.target }}/release/bundle/nsis/*.exe; do
-                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-windows-x64-setup.exe"
+              for f in target/$T/release/bundle/nsis/*.exe; do
+                mv "$f" "$(dirname "$f")/easytube-${V}-windows-x64-setup.exe"
               done
               ;;
             linux)
-              for f in target/${{ matrix.target }}/release/bundle/deb/*.deb; do
-                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-linux-x64.deb"
+              for f in target/$T/release/bundle/deb/*.deb; do
+                mv "$f" "$(dirname "$f")/easytube-${V}-linux-x64.deb"
               done
-              for f in target/${{ matrix.target }}/release/bundle/rpm/*.rpm 2>/dev/null; do
-                [ -f "$f" ] && mv "$f" "$(dirname "$f")/easytube-${V}-linux-x64.rpm"
+              for f in target/$T/release/bundle/rpm/*.rpm; do
+                mv "$f" "$(dirname "$f")/easytube-${V}-linux-x64.rpm"
               done
               ;;
           esac
